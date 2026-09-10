@@ -1,47 +1,25 @@
 .status-panel {
   position: fixed;
-  z-index: 2;
   top: 20px;
   left: 20px;
   width: min(260px, calc(100vw - 40px));
   box-sizing: border-box;
-  padding: 12px 13px 8px;
+  padding: 12px 12px 8px;
   overflow: hidden;
-  color: #f8fafc;
-  background: rgba(10, 20, 32, 0.88);
+  background: rgba(10, 20, 32, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
   box-shadow:
     0 8px 24px rgba(15, 23, 42, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
 
-.status-panel::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.78), transparent);
-  content: "";
+  backdrop-filter: blur(8px);
 }
 
 .status-panel__header {
-  display: block;
   color: #94a3b8;
   font-size: 10px;
   font-weight: 700;
-  line-height: 1.2;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -55,7 +33,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  min-height: 34px;
+  min-height: 28px;
 }
 
 .status-panel__connection + .status-panel__connection {
