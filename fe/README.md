@@ -11,7 +11,7 @@ Currently, two official plugins are available:
 
 Tailwind CSS is connected through `@tailwindcss/vite` and imported in `src/index.css`, including the standard Preflight reset. Use utility classes directly in JSX via `className`.
 
-Existing unlayered CSS takes precedence over Tailwind utilities; remove conflicting declarations when migrating a component to utilities.
+Layout, typography, colors, and connection animations use utility classes. Custom CSS is limited to MapLibre popup elements and native meter pseudo-elements. Aircraft colors come from the backend and use an inline style.
 
 ## React Compiler
 

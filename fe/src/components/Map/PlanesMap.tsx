@@ -187,7 +187,7 @@ export const PlanesMap = ({
 
   return (
     <>
-      <div id="planes-map" />
+      <div id="planes-map" className="h-full" />
       {selectedPlaneId && createPortal(selectedPlaneContent, popupContainerNode)}
     </>
   );
