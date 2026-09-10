@@ -9,7 +9,7 @@ be/dist/
 be/.env
 
 # IDE
-.vscode/
+# .vscode/
 .idea/
 *.swp
 *.swo
