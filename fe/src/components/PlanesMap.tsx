@@ -1,9 +1,13 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
 import { GeoJSONSource, Map, setWorkerUrl } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { PlaneBasic } from "../types";
+// import PlanePng from "../assets/plane.png";
+import PlanePng from "../assets/plane-1.png";
+import type { Feature, GeoJSON } from "geojson";
+import { getBearing } from "./utils";
 
 setWorkerUrl(workerUrl);
 
@@ -25,6 +29,10 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
 
     const map = mapRef.current;
 
+    map.loadImage(PlanePng).then((image) => {
+      map.addImage("plane-svg", image.data, { sdf: true });
+    });
+
     map.once("load", () => {
       map.addSource("planes-data", {
         type: "geojson",
@@ -37,13 +45,22 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
       map.addLayer({
         id: "planes",
         source: "planes-data",
-        type: "circle",
+        type: "symbol",
+        layout: {
+          "icon-image": "plane-svg",
+          "icon-size": 0.8,
+          "icon-allow-overlap": true,
+
+          // Heading rotation
+          "icon-rotate": ["get", "heading"],
+          "icon-rotation-alignment": "auto",
+        },
         paint: {
-          "circle-color": "red",
+          "icon-color": ["get", "color"],
         },
       });
 
-      map.on("click", "my-data-point", (ev) => {
+      map.on("click", "planes", (ev) => {
         console.log("click: ", ev);
         console.log(ev.features);
       });
@@ -58,26 +75,52 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
       return;
     }
 
-    const planesGeoJson = planes.map((plane) => {
-      return {
-        type: "Feature",
-        properties: {
-          planeId: plane.id,
-          planeColor: plane.color,
-        },
-        geometry: {
-          type: "Point",
-          coordinates: [plane.longitude, plane.latitude],
-        },
-      };
-    });
+    async function updatePlanes() {
+      const planesSource = map.getSource<GeoJSONSource>("planes-data");
+      const prevPlanes: GeoJSON = await planesSource.getData();
 
-    const planesSource = map.getSource<GeoJSONSource>("planes-data");
+      if (prevPlanes.type !== "FeatureCollection") {
+        console.error("invalid GeoJSON in planes source");
+        return;
+      }
 
-    planesSource.setData({
-      type: "FeatureCollection",
-      features: planesGeoJson,
-    });
+      const prevCoordinatesMap = prevPlanes.features.reduce<
+        Record<string, number[]>
+      >((acc, next) => {
+        if (next.geometry.type === "Point") {
+          acc[next.id] = next.geometry.coordinates;
+        }
+
+        return acc;
+      }, {});
+
+      const planesGeoJson: Feature[] = planes.map((plane) => {
+        return {
+          type: "Feature",
+          id: plane.id,
+          properties: {
+            color: plane.color,
+            heading: prevCoordinatesMap[plane.id]
+              ? getBearing(prevCoordinatesMap[plane.id], [
+                  plane.longitude,
+                  plane.latitude,
+                ])
+              : 0,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [plane.longitude, plane.latitude],
+          },
+        };
+      });
+
+      planesSource.setData({
+        type: "FeatureCollection",
+        features: planesGeoJson,
+      });
+    }
+
+    updatePlanes();
   }, [planes]);
 
   return <div id="planes-map" />;
