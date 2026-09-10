@@ -7,6 +7,12 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
+## Tailwind CSS
+
+Tailwind CSS is connected through `@tailwindcss/vite` and imported in `src/index.css`, including the standard Preflight reset. Use utility classes directly in JSX via `className`.
+
+Layout, typography, colors, and connection animations use utility classes. Custom CSS is limited to MapLibre popup elements and native meter pseudo-elements. Aircraft colors come from the backend and use an inline style.
+
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
