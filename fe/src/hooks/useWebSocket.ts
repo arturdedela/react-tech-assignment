@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-type WebSocketStatus = "connecting" | "closed" | "open" | "error";
+export type WebSocketStatus = "connecting" | "closed" | "open" | "error";
 
 type UseWebSocketOptions<TServerMessage> = {
   url: string;
@@ -43,7 +43,7 @@ export const useWebSocket = <
         if (messageValidator(message)) {
           onMessageEffect(message);
         } else {
-          console.warn("Received not supported message");
+          console.warn("Received not supported message: ", message);
         }
       } catch (err) {
         console.error("Error parsing socket message: ", err);
@@ -75,7 +75,16 @@ export const useWebSocket = <
     };
   }, [messageValidator, url]);
 
-  const webSocket = webSocketRef.current;
+  const send: UseWebSocketResult<TClientMessage>["send"] = (message) => {
+    const webSocket = webSocketRef.current;
 
-  return { status, send: (message) => webSocket.send(JSON.stringify(message)) };
+    if (!webSocket) {
+      console.error("Error sending message. Websocket not ready");
+      return;
+    }
+
+    webSocket.send(JSON.stringify(message));
+  };
+
+  return { status, send };
 };

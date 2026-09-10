@@ -1,22 +1,40 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
-import { GeoJSONSource, Map, setWorkerUrl, Popup } from "maplibre-gl";
-import { useEffect, useRef } from "react";
+import { GeoJSONSource, Map, setWorkerUrl, Popup, type LngLatLike } from "maplibre-gl";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { PlaneBasic } from "../../types";
 // import PlanePng from "../assets/plane.png";
 import PlanePng from "../../assets/plane-1.png";
-import type { Feature, GeoJSON } from "geojson";
 import { getBearing } from "./utils";
+import { isPlaneFeature, type PlaneFeature } from "./types";
+import { createPortal } from "react-dom";
 
 setWorkerUrl(workerUrl);
 
 interface PlanesMapProps {
   planes: PlaneBasic[];
+  selectedPlaneId: string | null;
+  onPlaneSelect: (planeId: string) => void;
+  onPopupClose: () => void;
+  selectedPlaneContent: React.ReactNode | null;
 }
 
-export const PlanesMap = ({ planes }: PlanesMapProps) => {
+export const PlanesMap = ({
+  planes,
+  selectedPlaneId,
+  onPlaneSelect,
+  selectedPlaneContent,
+  onPopupClose,
+}: PlanesMapProps) => {
   const mapRef = useRef<Map>(null);
+  const planesFeaturesRef = useRef<PlaneFeature[]>([]);
+  const [isMapReady, setIsMapReady] = useState(false);
+
+  const [popupContainerNode] = useState(() => document.createElement("div"));
+
+  const selectPlane = useEffectEvent(onPlaneSelect);
+  const closePopup = useEffectEvent(onPopupClose);
 
   useEffect(() => {
     mapRef.current = new Map({
@@ -60,20 +78,13 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
         },
       });
 
-      // When a click event occurs on a feature in the places layer, open a popup at the
-      // location of the feature, with description HTML from its properties.
       map.on("click", "planes", (e) => {
-        const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = e.features[0].properties.description;
-
-        // Ensure that if the map is zoomed out such that multiple
-        // copies of the feature are visible, the popup appears
-        // over the copy being pointed to.
-        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        const planeFeature = e.features?.[0];
+        if (!planeFeature || !isPlaneFeature(planeFeature)) {
+          return;
         }
 
-        new Popup().setLngLat(coordinates).setHTML(description).addTo(map);
+        selectPlane(planeFeature.properties.planeId);
       });
 
       // Change the cursor to a pointer when the mouse is over the places layer.
@@ -85,6 +96,8 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
       map.on("mouseleave", "planes", () => {
         map.getCanvas().style.cursor = "";
       });
+
+      setIsMapReady(true);
     });
 
     return () => map.remove();
@@ -92,41 +105,64 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.loaded()) {
+    if (!map || !isMapReady || !selectedPlaneId) {
       return;
     }
 
-    async function updatePlanes() {
-      const planesSource = map.getSource<GeoJSONSource>("planes-data");
-      const prevPlanes: GeoJSON = await planesSource.getData();
+    const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
 
-      if (prevPlanes.type !== "FeatureCollection") {
-        console.error("invalid GeoJSON in planes source");
+    if (!selectedPlane) {
+      return;
+    }
+
+    const detailsPopup = new Popup();
+
+    detailsPopup.on("close", closePopup);
+
+    const coordinates = [selectedPlane.longitude, selectedPlane.latitude];
+
+    detailsPopup
+      .setLngLat(coordinates as LngLatLike)
+      .setDOMContent(popupContainerNode)
+      .addTo(map);
+
+    return () => {
+      detailsPopup.off("close", closePopup);
+      detailsPopup.remove();
+    };
+  }, [selectedPlaneId, isMapReady, popupContainerNode, planes]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    const updatePlanes = async () => {
+      const planesSource = map.getSource<GeoJSONSource>("planes-data");
+      if (!planesSource) {
         return;
       }
 
-      const prevCoordinatesMap = prevPlanes.features.reduce<
-        Record<string, number[]>
-      >((acc, next) => {
+      const prevPlanes = planesFeaturesRef.current;
+
+      const prevCoordinatesMap = prevPlanes.reduce<Record<string, number[]>>((acc, next) => {
         if (next.geometry.type === "Point") {
-          acc[next.id] = next.geometry.coordinates;
+          acc[next.properties.planeId] = next.geometry.coordinates;
         }
 
         return acc;
       }, {});
 
-      const planesGeoJson: Feature[] = planes.map((plane) => {
+      const planesFeatures: PlaneFeature[] = planes.map((plane) => {
         return {
           type: "Feature",
-          id: plane.id,
           properties: {
+            planeId: plane.id,
             color: plane.color,
             altitude: plane.altitude,
             heading: prevCoordinatesMap[plane.id]
-              ? getBearing(prevCoordinatesMap[plane.id], [
-                  plane.longitude,
-                  plane.latitude,
-                ])
+              ? getBearing(prevCoordinatesMap[plane.id], [plane.longitude, plane.latitude])
               : 0,
           },
           geometry: {
@@ -135,15 +171,21 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
           },
         };
       });
+      planesFeaturesRef.current = planesFeatures;
 
       planesSource.setData({
         type: "FeatureCollection",
-        features: planesGeoJson,
+        features: planesFeatures,
       });
-    }
+    };
 
     updatePlanes();
-  }, [planes]);
+  }, [planes, isMapReady]);
 
-  return <div id="planes-map" />;
+  return (
+    <>
+      <div id="planes-map" />
+      {selectedPlaneId && createPortal(selectedPlaneContent, popupContainerNode)}
+    </>
+  );
 };

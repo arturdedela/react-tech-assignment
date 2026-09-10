@@ -76,11 +76,25 @@ export type PlaneDetailsMessage = {
 export const isPlanesMessage = (
   response: unknown,
 ): response is BasicPlanesMessage => {
-  return (
+  return !!(
+    response &&
     typeof response === "object" &&
     "type" in response &&
     response.type === "planes" &&
     "data" in response &&
     Array.isArray(response.data)
+  );
+};
+
+export const isPlaneDetailsMessage = (
+  response: unknown,
+): response is PlaneDetailsMessage => {
+  return !!(
+    response &&
+    typeof response === "object" &&
+    "type" in response &&
+    response.type === "plane-details" &&
+    "data" in response &&
+    typeof response.data === "object"
   );
 };
