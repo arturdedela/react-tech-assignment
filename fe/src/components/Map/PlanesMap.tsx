@@ -32,6 +32,14 @@ export const PlanesMap = ({
   const [isMapReady, setIsMapReady] = useState(false);
 
   const [popupContainerNode] = useState(() => document.createElement("div"));
+  const [detailsPopup] = useState(
+    () =>
+      new Popup({
+        maxWidth: "300px",
+        className: "planes-map__popup",
+        anchor: "top",
+      }),
+  );
 
   const selectPlane = useEffectEvent(onPlaneSelect);
   const closePopup = useEffectEvent(onPopupClose);
@@ -115,22 +123,17 @@ export const PlanesMap = ({
       return;
     }
 
-    const detailsPopup = new Popup();
-
     detailsPopup.on("close", closePopup);
 
     const coordinates = [selectedPlane.longitude, selectedPlane.latitude];
 
-    detailsPopup
-      .setLngLat(coordinates as LngLatLike)
-      .setDOMContent(popupContainerNode)
-      .addTo(map);
+    detailsPopup.setLngLat(coordinates as LngLatLike);
 
-    return () => {
-      detailsPopup.off("close", closePopup);
-      detailsPopup.remove();
-    };
-  }, [selectedPlaneId, isMapReady, popupContainerNode, planes]);
+    if (!detailsPopup.isOpen()) {
+      detailsPopup.setDOMContent(popupContainerNode);
+      detailsPopup.addTo(map);
+    }
+  }, [selectedPlaneId, isMapReady, popupContainerNode, planes, detailsPopup]);
 
   useEffect(() => {
     const map = mapRef.current;

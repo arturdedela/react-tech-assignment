@@ -1,3 +1,35 @@
 #planes-map {
   height: 100%;
 }
+
+.planes-map__popup .maplibregl-popup-content {
+  background: rgba(10, 20, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  padding: 0;
+}
+
+.planes-map__popup .maplibregl-popup-tip {
+  border-bottom-color: rgba(10, 20, 32, 0.75);
+}
+
+.planes-map__popup .maplibregl-popup-close-button {
+  top: 3px;
+  right: 3px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #94a3b8;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.planes-map__popup .maplibregl-popup-close-button:hover {
+  background: rgba(235, 235, 235, 0.1);
+  color: #f8fafc;
+}
