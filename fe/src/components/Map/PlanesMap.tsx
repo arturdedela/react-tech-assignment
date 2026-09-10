@@ -1,11 +1,11 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
-import { GeoJSONSource, Map, setWorkerUrl } from "maplibre-gl";
+import { GeoJSONSource, Map, setWorkerUrl, Popup } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import type { PlaneBasic } from "../types";
+import type { PlaneBasic } from "../../types";
 // import PlanePng from "../assets/plane.png";
-import PlanePng from "../assets/plane-1.png";
+import PlanePng from "../../assets/plane-1.png";
 import type { Feature, GeoJSON } from "geojson";
 import { getBearing } from "./utils";
 
@@ -60,9 +60,30 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
         },
       });
 
-      map.on("click", "planes", (ev) => {
-        console.log("click: ", ev);
-        console.log(ev.features);
+      // When a click event occurs on a feature in the places layer, open a popup at the
+      // location of the feature, with description HTML from its properties.
+      map.on("click", "planes", (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.description;
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        new Popup().setLngLat(coordinates).setHTML(description).addTo(map);
+      });
+
+      // Change the cursor to a pointer when the mouse is over the places layer.
+      map.on("mouseenter", "planes", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      // Change it back to a pointer when it leaves.
+      map.on("mouseleave", "planes", () => {
+        map.getCanvas().style.cursor = "";
       });
     });
 
@@ -100,6 +121,7 @@ export const PlanesMap = ({ planes }: PlanesMapProps) => {
           id: plane.id,
           properties: {
             color: plane.color,
+            altitude: plane.altitude,
             heading: prevCoordinatesMap[plane.id]
               ? getBearing(prevCoordinatesMap[plane.id], [
                   plane.longitude,
