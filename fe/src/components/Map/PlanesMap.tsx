@@ -10,6 +10,7 @@ import { type PlaneFeature } from "./types";
 import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
 import { usePlanesLayer } from "./usePlanesLayer";
+import { useMap } from "./useMap";
 
 setWorkerUrl(workerUrl);
 
@@ -28,8 +29,8 @@ export const PlanesMap = ({
   selectedPlaneContent,
   onPopupClose,
 }: PlanesMapProps) => {
-  const [map, setMap] = useState<Map | null>(null);
-  const planesFeaturesRef = useRef<PlaneFeature[]>([]);
+  const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
+  const map = useMap({ container: mapContainer });
 
   usePlanesLayer({
     map,
@@ -37,23 +38,7 @@ export const PlanesMap = ({
     onPlaneClick: onPlaneSelect,
   });
 
-  useEffect(() => {
-    const mapInstance = new Map({
-      container: "planes-map", // container id
-      style: "https://demotiles.maplibre.org/style.json", // style URL
-      center: [0, 0], // starting position [lng, lat]
-      zoom: 1, // starting zoom
-      maplibreLogo: true,
-    });
-
-    mapInstance.once("load", () => {
-      setMap(mapInstance);
-    });
-
-    return () => {
-      mapInstance.remove();
-    };
-  }, []);
+  const planesFeaturesRef = useRef<PlaneFeature[]>([]);
 
   useEffect(() => {
     if (!map) {
@@ -108,7 +93,7 @@ export const PlanesMap = ({
 
   return (
     <>
-      <div id="planes-map" className="h-full" />
+      <div ref={setMapContainer} className="h-full" />
       <MapPopup
         map={map}
         className="planes-map__popup"
