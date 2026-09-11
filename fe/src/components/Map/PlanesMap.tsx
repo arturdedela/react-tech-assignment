@@ -1,18 +1,14 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
-import { GeoJSONSource, Map, setWorkerUrl } from "maplibre-gl";
+import { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
-import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { PlaneBasic } from "../../types";
-// import PlanePng from "../assets/plane.png";
 import { getBearing } from "./utils";
 import { type PlaneFeature } from "./types";
 import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
 import { usePlanesLayer } from "./hooks/usePlanesLayer";
 import { useMap } from "./hooks/useMap";
-
-setWorkerUrl(workerUrl);
 
 interface PlanesMapProps {
   planes: PlaneBasic[];
