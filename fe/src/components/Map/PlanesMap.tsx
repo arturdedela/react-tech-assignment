@@ -1,6 +1,6 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
-import { GeoJSONSource, Map, setWorkerUrl, Popup, type LngLatLike } from "maplibre-gl";
+import { GeoJSONSource, Map, setWorkerUrl } from "maplibre-gl";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { PlaneBasic } from "../../types";
@@ -8,7 +8,7 @@ import type { PlaneBasic } from "../../types";
 import PlanePng from "../../assets/plane-1.png";
 import { getBearing } from "./utils";
 import { isPlaneFeature, type PlaneFeature } from "./types";
-import { createPortal } from "react-dom";
+import { MapPopup } from "./MapPopup/MapPopup";
 
 setWorkerUrl(workerUrl);
 
@@ -31,18 +31,9 @@ export const PlanesMap = ({
   const planesFeaturesRef = useRef<PlaneFeature[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
 
-  const [popupContainerNode] = useState(() => document.createElement("div"));
-  const [detailsPopup] = useState(
-    () =>
-      new Popup({
-        maxWidth: "300px",
-        className: "planes-map__popup",
-        anchor: "top",
-      }),
-  );
+  const map = mapRef.current;
 
   const selectPlane = useEffectEvent(onPlaneSelect);
-  const closePopup = useEffectEvent(onPopupClose);
 
   useEffect(() => {
     mapRef.current = new Map({
@@ -113,30 +104,6 @@ export const PlanesMap = ({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isMapReady || !selectedPlaneId) {
-      return;
-    }
-
-    const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
-
-    if (!selectedPlane) {
-      return;
-    }
-
-    detailsPopup.on("close", closePopup);
-
-    const coordinates = [selectedPlane.longitude, selectedPlane.latitude];
-
-    detailsPopup.setLngLat(coordinates as LngLatLike);
-
-    if (!detailsPopup.isOpen()) {
-      detailsPopup.setDOMContent(popupContainerNode);
-      detailsPopup.addTo(map);
-    }
-  }, [selectedPlaneId, isMapReady, popupContainerNode, planes, detailsPopup]);
-
-  useEffect(() => {
-    const map = mapRef.current;
     if (!map || !isMapReady) {
       return;
     }
@@ -185,10 +152,19 @@ export const PlanesMap = ({
     updatePlanes();
   }, [planes, isMapReady]);
 
+  const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
+
   return (
     <>
       <div id="planes-map" className="h-full" />
-      {selectedPlaneId && createPortal(selectedPlaneContent, popupContainerNode)}
+      <MapPopup
+        map={map}
+        className="planes-map__popup"
+        isOpen={selectedPlaneId !== null}
+        popupContent={selectedPlaneContent}
+        position={selectedPlane ? [selectedPlane.longitude, selectedPlane.latitude] : null}
+        onClosed={onPopupClose}
+      />
     </>
   );
 };

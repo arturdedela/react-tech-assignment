@@ -10,7 +10,7 @@
 }
 
 .planes-map__popup .maplibregl-popup-tip {
-  border-bottom-color: rgba(10, 20, 32, 0.75);
+  border-bottom-color: rgba(10, 20, 32, 0.5);
 }
 
 .planes-map__popup .maplibregl-popup-close-button {
