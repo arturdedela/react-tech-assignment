@@ -9,8 +9,8 @@ import { getBearing } from "./utils";
 import { type PlaneFeature } from "./types";
 import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
-import { usePlanesLayer } from "./usePlanesLayer";
-import { useMap } from "./useMap";
+import { usePlanesLayer } from "./hooks/usePlanesLayer";
+import { useMap } from "./hooks/useMap";
 
 setWorkerUrl(workerUrl);
 

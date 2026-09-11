@@ -1,6 +1,6 @@
 import type { Map, MapLayerMouseEvent } from "maplibre-gl";
 import { useEffect, useEffectEvent, useState } from "react";
-import { isPlaneFeature } from "./types";
+import { isPlaneFeature } from "../types";
 
 type UsePlanesLayerOptions = {
   map: Map | null;
