@@ -4,7 +4,7 @@ type PlaneFeatureProperties = {
   planeId: string;
   color: string;
   altitude: number;
-  heading: number;
+  // heading: number;
 };
 
 export type PlaneFeature = Feature<Point, PlaneFeatureProperties>;

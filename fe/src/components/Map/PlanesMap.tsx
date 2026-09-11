@@ -1,14 +1,12 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
-import { GeoJSONSource } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { PlaneBasic } from "../../types";
-import { getBearing } from "./utils";
-import { type PlaneFeature } from "./types";
 import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
 import { usePlanesLayer } from "./hooks/usePlanesLayer";
 import { useMap } from "./hooks/useMap";
+import { toPlaneFeatureCollection } from "./utils/toPlaneFeatureCollection";
 
 interface PlanesMapProps {
   planes: PlaneBasic[];
@@ -28,62 +26,15 @@ export const PlanesMap = ({
   const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
   const map = useMap({ container: mapContainer });
 
-  usePlanesLayer({
+  const { setPlanesData } = usePlanesLayer({
     map,
     planeIconUrl: PlanePng,
     onPlaneClick: onPlaneSelect,
   });
 
-  const planesFeaturesRef = useRef<PlaneFeature[]>([]);
-
   useEffect(() => {
-    if (!map) {
-      return;
-    }
-
-    const updatePlanes = async () => {
-      const planesSource = map.getSource<GeoJSONSource>("planes-source");
-      if (!planesSource) {
-        return;
-      }
-
-      const prevPlanes = planesFeaturesRef.current;
-
-      const prevCoordinatesMap = prevPlanes.reduce<Record<string, number[]>>((acc, next) => {
-        if (next.geometry.type === "Point") {
-          acc[next.properties.planeId] = next.geometry.coordinates;
-        }
-
-        return acc;
-      }, {});
-
-      const planesFeatures: PlaneFeature[] = planes.map((plane) => {
-        return {
-          type: "Feature",
-          properties: {
-            planeId: plane.id,
-            color: plane.color,
-            altitude: plane.altitude,
-            heading: prevCoordinatesMap[plane.id]
-              ? getBearing(prevCoordinatesMap[plane.id], [plane.longitude, plane.latitude])
-              : 0,
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [plane.longitude, plane.latitude],
-          },
-        };
-      });
-      planesFeaturesRef.current = planesFeatures;
-
-      planesSource.setData({
-        type: "FeatureCollection",
-        features: planesFeatures,
-      });
-    };
-
-    updatePlanes();
-  }, [planes, map]);
+    setPlanesData(toPlaneFeatureCollection(planes));
+  }, [planes, setPlanesData]);
 
   const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
 

@@ -1,6 +1,6 @@
-import type { Map, MapLayerMouseEvent } from "maplibre-gl";
-import { useEffect, useEffectEvent, useState } from "react";
-import { isPlaneFeature } from "../types";
+import type { GeoJSONSource, Map, MapLayerMouseEvent } from "maplibre-gl";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
+import { isPlaneFeature, type PlaneFeatureCollection } from "../types";
 
 type UsePlanesLayerOptions = {
   map: Map | null;
@@ -8,13 +8,24 @@ type UsePlanesLayerOptions = {
   onPlaneClick: (planeId: string) => void;
 };
 
-// type UsePlanesLayerResult = {};
+type UsePlanesLayerResult = {
+  setPlanesData: (planeFeatureCollection: PlaneFeatureCollection) => void;
+};
 
 const PLANE_ICON_NAME = "plane-icon";
 const PLANES_LAYER_ID = "planes-layer";
 const PLANES_SOURCE_ID = "planes-source";
 
-export const usePlanesLayer = ({ map, planeIconUrl, onPlaneClick }: UsePlanesLayerOptions) => {
+const INITIAL_SOURCE_DATA: PlaneFeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
+
+export const usePlanesLayer = ({
+  map,
+  planeIconUrl,
+  onPlaneClick,
+}: UsePlanesLayerOptions): UsePlanesLayerResult => {
   const notifyPlaneClicked = useEffectEvent(onPlaneClick);
   const [isPlaneImageReady, setIsPlaneImageReady] = useState(false);
 
@@ -41,10 +52,7 @@ export const usePlanesLayer = ({ map, planeIconUrl, onPlaneClick }: UsePlanesLay
 
     map.addSource(PLANES_SOURCE_ID, {
       type: "geojson",
-      data: {
-        type: "FeatureCollection",
-        features: [],
-      },
+      data: INITIAL_SOURCE_DATA,
     });
 
     map.addLayer({
@@ -95,4 +103,24 @@ export const usePlanesLayer = ({ map, planeIconUrl, onPlaneClick }: UsePlanesLay
       map.removeSource(PLANES_SOURCE_ID);
     };
   }, [map, isPlaneImageReady]);
+
+  const setPlanesData = useCallback(
+    (planeFeatureCollection: PlaneFeatureCollection) => {
+      if (!map) {
+        console.warn("[setPlanesSource] map is null");
+        return;
+      }
+
+      const source = map.getSource<GeoJSONSource>(PLANES_SOURCE_ID);
+      if (!source) {
+        console.warn("[setPlanesSource] planes source not found");
+        return;
+      }
+
+      source.setData(planeFeatureCollection);
+    },
+    [map],
+  );
+
+  return { setPlanesData };
 };
