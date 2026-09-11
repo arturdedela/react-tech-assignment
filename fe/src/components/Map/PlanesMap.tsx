@@ -44,7 +44,6 @@ export const PlanesMap = ({
       <MapPopup
         map={map}
         className="planes-map__popup"
-        isOpen={selectedPlaneId !== null}
         popupContent={selectedPlaneContent}
         position={selectedPlane ? [selectedPlane.longitude, selectedPlane.latitude] : null}
         onClosed={onPopupClose}

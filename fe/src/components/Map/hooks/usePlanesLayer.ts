@@ -65,8 +65,8 @@ export const usePlanesLayer = ({
         "icon-allow-overlap": true,
 
         // Heading rotation
-        "icon-rotate": ["get", "heading"],
-        "icon-rotation-alignment": "auto",
+        // "icon-rotate": ["get", "heading"],
+        // "icon-rotation-alignment": "auto",
       },
       paint: {
         "icon-color": ["get", "color"],

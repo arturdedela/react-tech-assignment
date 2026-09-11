@@ -5,25 +5,18 @@ import { createPortal } from "react-dom";
 type MapPopupProps = {
   className?: string;
   map: Map | null;
-  isOpen: boolean;
   position: LngLatLike | null;
   popupContent: React.ReactNode;
   // Called when popup is already closed
   onClosed: () => void;
 };
 
-export const MapPopup = ({
-  popupContent,
-  map,
-  isOpen,
-  position,
-  className,
-  onClosed,
-}: MapPopupProps) => {
+export const MapPopup = ({ popupContent, map, position, className, onClosed }: MapPopupProps) => {
   const [popupContainer] = useState(() => document.createElement("div"));
   const [popup] = useState(() => new Popup({ maxWidth: "300px", className, anchor: "top" }));
 
   const notifyClosed = useEffectEvent(onClosed);
+  const isOpen: boolean = !!position;
 
   // Controls when popup should be opened/closed
   useEffect(() => {
@@ -37,6 +30,7 @@ export const MapPopup = ({
 
       return () => {
         popup.off("close", notifyClosed);
+        popup.remove();
       };
     }
   }, [popupContainer, popup, map, isOpen]);
