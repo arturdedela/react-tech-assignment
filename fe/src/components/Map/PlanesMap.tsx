@@ -1,14 +1,15 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
 import { GeoJSONSource, Map, setWorkerUrl } from "maplibre-gl";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { PlaneBasic } from "../../types";
 // import PlanePng from "../assets/plane.png";
-import PlanePng from "../../assets/plane-1.png";
 import { getBearing } from "./utils";
-import { isPlaneFeature, type PlaneFeature } from "./types";
+import { type PlaneFeature } from "./types";
 import { MapPopup } from "./MapPopup/MapPopup";
+import PlanePng from "../../assets/plane-1.png";
+import { usePlanesLayer } from "./usePlanesLayer";
 
 setWorkerUrl(workerUrl);
 
@@ -27,16 +28,17 @@ export const PlanesMap = ({
   selectedPlaneContent,
   onPopupClose,
 }: PlanesMapProps) => {
-  const mapRef = useRef<Map>(null);
+  const [map, setMap] = useState<Map | null>(null);
   const planesFeaturesRef = useRef<PlaneFeature[]>([]);
-  const [isMapReady, setIsMapReady] = useState(false);
 
-  const map = mapRef.current;
-
-  const selectPlane = useEffectEvent(onPlaneSelect);
+  usePlanesLayer({
+    map,
+    planeIconUrl: PlanePng,
+    onPlaneClick: onPlaneSelect,
+  });
 
   useEffect(() => {
-    mapRef.current = new Map({
+    const mapInstance = new Map({
       container: "planes-map", // container id
       style: "https://demotiles.maplibre.org/style.json", // style URL
       center: [0, 0], // starting position [lng, lat]
@@ -44,72 +46,22 @@ export const PlanesMap = ({
       maplibreLogo: true,
     });
 
-    const map = mapRef.current;
-
-    map.loadImage(PlanePng).then((image) => {
-      map.addImage("plane-svg", image.data, { sdf: true });
+    mapInstance.once("load", () => {
+      setMap(mapInstance);
     });
 
-    map.once("load", () => {
-      map.addSource("planes-data", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
-      });
-
-      map.addLayer({
-        id: "planes",
-        source: "planes-data",
-        type: "symbol",
-        layout: {
-          "icon-image": "plane-svg",
-          "icon-size": 0.8,
-          "icon-allow-overlap": true,
-
-          // Heading rotation
-          "icon-rotate": ["get", "heading"],
-          "icon-rotation-alignment": "auto",
-        },
-        paint: {
-          "icon-color": ["get", "color"],
-        },
-      });
-
-      map.on("click", "planes", (e) => {
-        const planeFeature = e.features?.[0];
-        if (!planeFeature || !isPlaneFeature(planeFeature)) {
-          return;
-        }
-
-        selectPlane(planeFeature.properties.planeId);
-      });
-
-      // Change the cursor to a pointer when the mouse is over the places layer.
-      map.on("mouseenter", "planes", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-
-      // Change it back to a pointer when it leaves.
-      map.on("mouseleave", "planes", () => {
-        map.getCanvas().style.cursor = "";
-      });
-
-      setIsMapReady(true);
-    });
-
-    return () => map.remove();
+    return () => {
+      mapInstance.remove();
+    };
   }, []);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !isMapReady) {
+    if (!map) {
       return;
     }
 
     const updatePlanes = async () => {
-      const planesSource = map.getSource<GeoJSONSource>("planes-data");
+      const planesSource = map.getSource<GeoJSONSource>("planes-source");
       if (!planesSource) {
         return;
       }
@@ -150,7 +102,7 @@ export const PlanesMap = ({
     };
 
     updatePlanes();
-  }, [planes, isMapReady]);
+  }, [planes, map]);
 
   const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
 
