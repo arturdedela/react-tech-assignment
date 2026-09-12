@@ -32,6 +32,7 @@ export const useWebSocket = <TServerMessage, TClientMessage extends object = nev
 
     const webSocket = new WebSocket(url);
     webSocketRef.current = webSocket;
+    setStatus("connecting");
 
     const handleOpen = () => {
       setStatus("open");
