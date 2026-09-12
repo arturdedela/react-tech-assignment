@@ -36,13 +36,19 @@ export const usePlanesLayer = ({
     if (!map) {
       return;
     }
+    let cancelled = false;
 
     map.loadImage(planeIconUrl).then((image) => {
+      if (cancelled) {
+        return;
+      }
+
       map.addImage(PLANE_ICON_NAME, image.data, { sdf: true });
       setIsPlaneImageReady(true);
     });
 
     return () => {
+      cancelled = true;
       map.removeImage(PLANE_ICON_NAME);
     };
   }, [map, planeIconUrl]);
@@ -108,7 +114,7 @@ export const usePlanesLayer = ({
   }, [map, isPlaneImageReady]);
 
   useEffect(() => {
-    if (!map) {
+    if (!map || !isPlaneImageReady) {
       return;
     }
     const source = map.getSource<GeoJSONSource>(PLANES_SOURCE_ID);
@@ -117,7 +123,7 @@ export const usePlanesLayer = ({
     }
 
     source.setData(toPlaneFeatureCollection(planes));
-  }, [map, planes]);
+  }, [map, planes, isPlaneImageReady]);
 
   useEffect(() => {
     if (!map || !hiddenPlaneId) {
