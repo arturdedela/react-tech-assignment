@@ -1,15 +1,14 @@
 import type { GeoJSONSource, Map, MapLayerMouseEvent } from "maplibre-gl";
-import { useCallback, useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { isPlaneFeature, type PlaneFeatureCollection } from "../types";
+import type { PlaneBasic } from "../../../types";
+import { toPlaneFeatureCollection } from "../utils/toPlaneFeatureCollection";
 
 type UsePlanesLayerOptions = {
   map: Map | null;
   planeIconUrl: string;
+  planes: PlaneBasic[];
   onPlaneClick: (planeId: string) => void;
-};
-
-type UsePlanesLayerResult = {
-  setPlanesData: (planeFeatureCollection: PlaneFeatureCollection) => void;
 };
 
 const PLANE_ICON_NAME = "plane-icon";
@@ -24,8 +23,9 @@ const INITIAL_SOURCE_DATA: PlaneFeatureCollection = {
 export const usePlanesLayer = ({
   map,
   planeIconUrl,
+  planes,
   onPlaneClick,
-}: UsePlanesLayerOptions): UsePlanesLayerResult => {
+}: UsePlanesLayerOptions): void => {
   const notifyPlaneClicked = useEffectEvent(onPlaneClick);
   const [isPlaneImageReady, setIsPlaneImageReady] = useState(false);
 
@@ -104,23 +104,17 @@ export const usePlanesLayer = ({
     };
   }, [map, isPlaneImageReady]);
 
-  const setPlanesData = useCallback(
-    (planeFeatureCollection: PlaneFeatureCollection) => {
-      if (!map) {
-        console.warn("[setPlanesSource] map is null");
-        return;
-      }
+  useEffect(() => {
+    if (!map) {
+      console.warn("[usePlanesLayer] map is null");
+      return;
+    }
+    const source = map.getSource<GeoJSONSource>(PLANES_SOURCE_ID);
+    if (!source) {
+      console.warn("[usePlanesLayer] planes source not found");
+      return;
+    }
 
-      const source = map.getSource<GeoJSONSource>(PLANES_SOURCE_ID);
-      if (!source) {
-        console.warn("[setPlanesSource] planes source not found");
-        return;
-      }
-
-      source.setData(planeFeatureCollection);
-    },
-    [map],
-  );
-
-  return { setPlanesData };
+    source.setData(toPlaneFeatureCollection(planes));
+  }, [map, planes]);
 };
