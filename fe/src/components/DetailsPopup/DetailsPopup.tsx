@@ -95,39 +95,39 @@ export function DetailsPopup({ planeDetails: plane }: DetailsPopupProps) {
         </div>
       </section>
 
-      <dl className="my-4 grid grid-cols-2 gap-3">
+      <div className="my-4 grid grid-cols-2 gap-3">
         <div>
-          <dt className="font-medium text-slate-400">Flight duration</dt>
-          <dd className="mt-1 font-semibold">
+          <div className="font-medium text-slate-400">Flight duration</div>
+          <div className="mt-1 font-semibold">
             {Math.floor(duration / 60)}h {duration % 60}m
-          </dd>
+          </div>
         </div>
         <div className="text-right">
-          <dt className="font-medium text-slate-400">Estimated arrival · UTC</dt>
-          <dd className="mt-1 font-semibold">{arrivalFormat.format(plane.estimatedArrival)}</dd>
+          <div className="font-medium text-slate-400">Estimated arrival · UTC</div>
+          <div className="mt-1 font-semibold">{arrivalFormat.format(plane.estimatedArrival)}</div>
         </div>
-      </dl>
+      </div>
 
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
         {telemetry.map(({ label, value, unit }) => (
           <div className="bg-slate-950/60 px-3 py-2.5" key={label}>
-            <dt className="font-medium text-slate-400">{label}</dt>
-            <dd className="mt-1 text-lg font-semibold text-slate-50">
+            <div className="font-medium text-slate-400">{label}</div>
+            <div className="mt-1 text-lg font-semibold text-slate-50">
               {value}
               {unit && <span className="text-xs font-normal text-slate-400"> {unit}</span>}
-            </dd>
+            </div>
           </div>
         ))}
-      </dl>
+      </div>
 
-      <dl className="mt-4 grid gap-2">
+      <div className="mt-4 grid gap-2">
         {facts.map(({ label, value }) => (
           <div className="flex items-baseline justify-between gap-3" key={label}>
-            <dt className="shrink-0 font-medium text-slate-400">{label}</dt>
-            <dd className="min-w-0 text-right">{value}</dd>
+            <div className="shrink-0 font-medium text-slate-400">{label}</div>
+            <div className="min-w-0 text-right">{value}</div>
           </div>
         ))}
-      </dl>
+      </div>
 
       <section className="mt-4 border-t border-white/10 pt-3">
         <div className="flex justify-between gap-3 text-slate-400">
