@@ -22,7 +22,6 @@ export const useMap = ({ container }: UseMapOptions): Map | null => {
       style: "https://demotiles.maplibre.org/style.json",
       center: [0, 0],
       zoom: 1,
-      maplibreLogo: true,
     });
 
     mapInstance.once("load", () => {
