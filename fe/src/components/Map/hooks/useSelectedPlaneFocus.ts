@@ -3,7 +3,7 @@ import type { Map } from "maplibre-gl";
 import type { PlaneBasic } from "../../../types";
 
 type useSelectedPlaneFocusOptions = {
-  map: Pick<Map, "flyTo"> | null;
+  map: Map | null;
   selectedPlane: Pick<PlaneBasic, "id" | "longitude" | "latitude"> | null;
 };
 
@@ -17,7 +17,8 @@ export const useSelectedPlaneFocus = ({ selectedPlane, map }: useSelectedPlaneFo
 
     map.flyTo({
       center: [selectedPlane.longitude, selectedPlane.latitude],
-      zoom: 6,
+      zoom: 8,
+      pitch: Math.min(70, Math.max(45, map.getPitch())),
       offset: [0, -250],
     });
   });
