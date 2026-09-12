@@ -1,4 +1,5 @@
 import type { PlaneDetailed } from "../../types";
+import { PlaneIcon } from "../PlaneIcon/PlaneIcon";
 import "./DetailsPopup.css";
 
 type DetailsPopupProps = {
@@ -58,19 +59,7 @@ export function DetailsPopup({ planeDetails: plane }: DetailsPopupProps) {
     <div className="w-80 max-w-full overflow-y-auto overscroll-contain rounded-xl p-4 text-xs leading-normal wrap-anywhere text-slate-200">
       <header className="flex flex-wrap items-center gap-2.5">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span
-            className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5"
-            style={{ color: plane.color }}
-          >
-            <svg
-              className="size-6 rotate-45"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" />
-            </svg>
-          </span>
+          <PlaneIcon color={plane.color} />
           <div className="min-w-0">
             <h2 className="text-xl font-semibold leading-tight tracking-tight text-slate-50">
               {plane.flightNumber}

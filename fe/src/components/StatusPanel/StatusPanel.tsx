@@ -21,7 +21,7 @@ export const StatusPanel = ({
 }: StatusPanelProps) => {
   return (
     <aside
-      className="fixed top-5 left-5 w-64 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-xl border border-white/15 bg-slate-950/80 p-3 pb-2 shadow-xl backdrop-blur-sm"
+      className="shrink-0 overflow-hidden rounded-xl border border-white/15 bg-slate-950/80 p-3 pb-2 shadow-xl backdrop-blur-sm"
       aria-label="Data connection status"
     >
       <div className="text-xs font-bold tracking-widest text-slate-400 uppercase">
