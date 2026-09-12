@@ -23,6 +23,9 @@ export const useMap = ({ container }: UseMapOptions): Map | null => {
       style: "https://tiles.openfreemap.org/styles/positron",
       center: [0, 0],
       zoom: 1,
+      minZoom: 1,
+      maxZoom: 12,
+      maxPitch: 80,
     });
 
     mapInstance.once("load", () => {
