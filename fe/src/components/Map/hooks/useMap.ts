@@ -26,6 +26,7 @@ export const useMap = ({ container }: UseMapOptions): Map | null => {
       minZoom: 1,
       maxZoom: 12,
       maxPitch: 80,
+      renderWorldCopies: false,
     });
 
     mapInstance.once("load", () => {
