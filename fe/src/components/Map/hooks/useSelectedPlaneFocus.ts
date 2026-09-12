@@ -4,7 +4,7 @@ import type { PlaneBasic } from "../../../types";
 
 type useSelectedPlaneFocusOptions = {
   map: Pick<Map, "flyTo"> | null;
-  selectedPlane: Pick<PlaneBasic, "id" | "longitude" | "latitude"> | undefined;
+  selectedPlane: Pick<PlaneBasic, "id" | "longitude" | "latitude"> | null;
 };
 
 export const useSelectedPlaneFocus = ({ selectedPlane, map }: useSelectedPlaneFocusOptions) => {

@@ -17,11 +17,16 @@ function App() {
     setSelectedPlaneId(planeId);
   };
 
+  const selectedPlane =
+    selectedPlaneId === planeDetailsSource.planeDetails?.id
+      ? planeDetailsSource.planeDetails
+      : null;
+
   return (
     <>
       <PlanesMap
         planes={planesSource.planes}
-        selectedPlaneId={selectedPlaneId}
+        selectedPlane={selectedPlane}
         onPlaneSelect={handlePlaneSelect}
         selectedPlaneContent={
           planeDetailsSource.planeDetails ? (

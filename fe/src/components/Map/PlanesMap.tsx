@@ -1,16 +1,17 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./PlanesMap.css";
 import { useState } from "react";
-import type { PlaneBasic } from "../../types";
+import type { PlaneBasic, PlaneDetailed } from "../../types";
 import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
 import { usePlanesLayer } from "./hooks/usePlanesLayer";
 import { useMap } from "./hooks/useMap";
 import { useSelectedPlaneFocus } from "./hooks/useSelectedPlaneFocus";
+import { usePlane3dLayer } from "./hooks/usePlane3DLayer";
 
 interface PlanesMapProps {
   planes: PlaneBasic[];
-  selectedPlaneId: string | null;
+  selectedPlane: PlaneDetailed | null;
   onPlaneSelect: (planeId: string) => void;
   onPopupClose: () => void;
   selectedPlaneContent: React.ReactNode | null;
@@ -18,7 +19,7 @@ interface PlanesMapProps {
 
 export const PlanesMap = ({
   planes,
-  selectedPlaneId,
+  selectedPlane,
   onPlaneSelect,
   selectedPlaneContent,
   onPopupClose,
@@ -33,7 +34,7 @@ export const PlanesMap = ({
     planes,
   });
 
-  const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
+  usePlane3dLayer({ map, plane: selectedPlane });
 
   useSelectedPlaneFocus({ map, selectedPlane });
 
