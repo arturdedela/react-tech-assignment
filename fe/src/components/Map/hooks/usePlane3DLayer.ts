@@ -30,6 +30,7 @@ export function usePlane3dLayer({ map, plane }: Options) {
       latitude: plane.latitude,
       altitude: plane.altitude,
       heading: plane.heading,
+      color: plane.color,
     };
   });
 
@@ -81,6 +82,27 @@ export function usePlane3dLayer({ map, plane }: Options) {
         if (!planeData || !model || !renderer) {
           return;
         }
+
+        // console.group();
+        model.traverse((obj) => {
+          if (!(obj instanceof THREE.Mesh)) return;
+
+          const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+          materials.forEach((material) => {
+            if (
+              material instanceof THREE.MeshStandardMaterial ||
+              material instanceof THREE.MeshPhongMaterial ||
+              material instanceof THREE.MeshLambertMaterial ||
+              material instanceof THREE.MeshBasicMaterial
+            ) {
+              // console.log({ material });
+              if (material.name === "Material.001") {
+                material.color.set(planeData.color);
+              }
+            }
+          });
+        });
+        // console.groupEnd();
 
         const position = MercatorCoordinate.fromLngLat(
           [planeData.longitude, planeData.latitude],
