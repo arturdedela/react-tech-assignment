@@ -32,6 +32,8 @@ export const PlanesMap = ({
     planeIconUrl: PlanePng,
     onPlaneClick: onPlaneSelect,
     planes,
+    // Hide plane icon, in favor of 3d plane
+    hiddenPlaneId: selectedPlane?.id ?? null,
   });
 
   usePlane3dLayer({ map, plane: selectedPlane });

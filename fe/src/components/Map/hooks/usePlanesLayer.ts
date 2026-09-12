@@ -8,6 +8,7 @@ type UsePlanesLayerOptions = {
   map: Map | null;
   planeIconUrl: string;
   planes: PlaneBasic[];
+  hiddenPlaneId: string | null;
   onPlaneClick: (planeId: string) => void;
 };
 
@@ -24,6 +25,7 @@ export const usePlanesLayer = ({
   map,
   planeIconUrl,
   planes,
+  hiddenPlaneId,
   onPlaneClick,
 }: UsePlanesLayerOptions): void => {
   const notifyPlaneClicked = useEffectEvent(onPlaneClick);
@@ -116,4 +118,16 @@ export const usePlanesLayer = ({
 
     source.setData(toPlaneFeatureCollection(planes));
   }, [map, planes]);
+
+  useEffect(() => {
+    if (!map || !hiddenPlaneId) {
+      return;
+    }
+
+    map.setFilter(PLANES_LAYER_ID, ["!=", ["get", "planeId"], hiddenPlaneId]);
+
+    return () => {
+      map.setFilter(PLANES_LAYER_ID, null);
+    };
+  }, [map, hiddenPlaneId]);
 };
