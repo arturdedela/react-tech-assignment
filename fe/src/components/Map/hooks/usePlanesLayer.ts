@@ -64,6 +64,8 @@ export const usePlanesLayer = ({
         "icon-size": 0.8,
         "icon-allow-overlap": true,
 
+        "symbol-height-offset": ["get", "altitude"],
+
         // Heading rotation
         // "icon-rotate": ["get", "heading"],
         // "icon-rotation-alignment": "auto",

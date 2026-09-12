@@ -19,12 +19,15 @@ export const useMap = ({ container }: UseMapOptions): Map | null => {
 
     const mapInstance = new Map({
       container,
-      style: "https://demotiles.maplibre.org/style.json",
+      // Styles available here: https://openfreemap.org/quick_start/
+      style: "https://tiles.openfreemap.org/styles/positron",
       center: [0, 0],
       zoom: 1,
     });
 
     mapInstance.once("load", () => {
+      addTerain(mapInstance);
+
       setMap(mapInstance);
     });
 
@@ -35,3 +38,20 @@ export const useMap = ({ container }: UseMapOptions): Map | null => {
 
   return map;
 };
+
+function addTerain(map: Map) {
+  map.addSource("terrainSource", {
+    type: "raster-dem",
+    tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+    encoding: "terrarium",
+    tileSize: 256,
+    maxzoom: 15,
+    attribution:
+      '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen terrain attribution</a>',
+  });
+
+  map.setTerrain({
+    source: "terrainSource",
+    exaggeration: 1,
+  });
+}
