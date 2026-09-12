@@ -1,9 +1,10 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 
 export type WebSocketStatus = "connecting" | "closed" | "open" | "error";
 
 type UseWebSocketOptions<TServerMessage> = {
   url: string;
+  connect?: boolean;
   messageValidator: (message: unknown) => message is TServerMessage;
   onMessage: (message: TServerMessage) => void;
 };
@@ -13,20 +14,22 @@ type UseWebSocketResult<TClientMessage extends object> = {
   send: (message: TClientMessage) => void;
 };
 
-export const useWebSocket = <
-  TServerMessage,
-  TClientMessage extends object = never,
->({
+export const useWebSocket = <TServerMessage, TClientMessage extends object = never>({
   url,
+  connect = true,
   messageValidator,
   onMessage,
 }: UseWebSocketOptions<TServerMessage>): UseWebSocketResult<TClientMessage> => {
   const webSocketRef = useRef<WebSocket>(null);
-  const [status, setStatus] = useState<WebSocketStatus>("connecting");
+  const [status, setStatus] = useState<WebSocketStatus>(connect ? "connecting" : "closed");
 
   const onMessageEffect = useEffectEvent(onMessage);
 
   useEffect(() => {
+    if (!connect) {
+      return;
+    }
+
     const webSocket = new WebSocket(url);
     webSocketRef.current = webSocket;
 
@@ -72,19 +75,19 @@ export const useWebSocket = <
       webSocket.removeEventListener("close", handleClose);
 
       webSocket.close();
+      setStatus("closed");
     };
-  }, [messageValidator, url]);
+  }, [messageValidator, url, connect]);
 
-  const send: UseWebSocketResult<TClientMessage>["send"] = (message) => {
+  const send: UseWebSocketResult<TClientMessage>["send"] = useCallback((message) => {
     const webSocket = webSocketRef.current;
 
     if (!webSocket) {
-      console.error("Error sending message. Websocket not ready");
-      return;
+      throw new Error("Websocket not ready. Check status before sending messages.");
     }
 
     webSocket.send(JSON.stringify(message));
-  };
+  }, []);
 
   return { status, send };
 };

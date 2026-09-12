@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WS_BASE_URL } from "../constants";
 import {
   type PlaneDetailed,
@@ -8,24 +8,34 @@ import {
 } from "../types";
 import { useWebSocket, type WebSocketStatus } from "./useWebSocket";
 
+type UsePlaneDetailsOptions = {
+  planeId: string | null;
+};
+
 type UsePlaneDetailsResult = {
   planeDetails: PlaneDetailed | null;
   status: WebSocketStatus;
-  subscribe: (planeId: string) => void;
 };
 
-export const usePlaneDetails = (): UsePlaneDetailsResult => {
+export const usePlaneDetails = ({ planeId }: UsePlaneDetailsOptions): UsePlaneDetailsResult => {
   const [planeDetails, setPlaneDetails] = useState<PlaneDetailed | null>(null);
 
   const { status, send } = useWebSocket<PlaneDetailsMessage, SubscribeMessage>({
     url: `${WS_BASE_URL}/ws/planes/details`,
+    connect: planeId !== null,
     messageValidator: isPlaneDetailsMessage,
     onMessage: (message) => setPlaneDetails(message.data),
   });
 
-  const subscribe: UsePlaneDetailsResult["subscribe"] = (planeId) => {
-    send({ type: "subscribe", planeId });
-  };
+  const isConnected = status === "open";
 
-  return { planeDetails, status, subscribe };
+  useEffect(() => {
+    if (!planeId || !isConnected) {
+      return;
+    }
+
+    send({ type: "subscribe", planeId });
+  }, [planeId, isConnected, send]);
+
+  return { planeDetails, status };
 };

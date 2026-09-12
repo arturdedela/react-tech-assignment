@@ -9,11 +9,10 @@ function App() {
   const [selectedPlaneId, setSelectedPlaneId] = useState<string | null>(null);
 
   const planesSource = usePlanes();
-  const planeDetailsSource = usePlaneDetails();
+  const planeDetailsSource = usePlaneDetails({ planeId: selectedPlaneId });
 
   const handlePlaneSelect = (planeId: string) => {
     setSelectedPlaneId(planeId);
-    planeDetailsSource.subscribe(planeId);
   };
 
   return (
@@ -30,16 +29,14 @@ function App() {
         onPopupClose={() => setSelectedPlaneId(null)}
       />
       <StatusPanel
-        connections={[{ label: "Aircraft positions", status: planesSource.status }].concat(
-          selectedPlaneId
-            ? [
-                {
-                  label: `Aircraft details ${selectedPlaneId}`,
-                  status: planeDetailsSource.status,
-                },
-              ]
-            : [],
-        )}
+        connections={[
+          { label: "Aircraft Locations", status: planesSource.status },
+
+          {
+            label: `Aircraft Details ${selectedPlaneId ? ` "${selectedPlaneId}"` : ""}`,
+            status: planeDetailsSource.status,
+          },
+        ]}
       />
     </>
   );

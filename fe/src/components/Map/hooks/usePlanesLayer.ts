@@ -106,12 +106,10 @@ export const usePlanesLayer = ({
 
   useEffect(() => {
     if (!map) {
-      console.warn("[usePlanesLayer] map is null");
       return;
     }
     const source = map.getSource<GeoJSONSource>(PLANES_SOURCE_ID);
     if (!source) {
-      console.warn("[usePlanesLayer] planes source not found");
       return;
     }
 
