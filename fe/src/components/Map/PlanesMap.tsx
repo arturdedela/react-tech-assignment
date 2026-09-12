@@ -6,6 +6,7 @@ import { MapPopup } from "./MapPopup/MapPopup";
 import PlanePng from "../../assets/plane-1.png";
 import { usePlanesLayer } from "./hooks/usePlanesLayer";
 import { useMap } from "./hooks/useMap";
+import { useSelectedPlaneFocus } from "./hooks/useSelectedPlaneFocus";
 
 interface PlanesMapProps {
   planes: PlaneBasic[];
@@ -33,6 +34,8 @@ export const PlanesMap = ({
   });
 
   const selectedPlane = planes.find((plane) => plane.id === selectedPlaneId);
+
+  useSelectedPlaneFocus({ map, selectedPlane });
 
   return (
     <>
