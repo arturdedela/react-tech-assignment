@@ -50,6 +50,7 @@ describe("useWebSocket", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -81,6 +82,35 @@ describe("useWebSocket", () => {
 
     act(() => connection.dispatchEvent(new Event("close")));
     expect(result.current.status).toBe("closed");
+  });
+
+  it("reconnects after disconnection and uses the replacement socket", () => {
+    vi.useFakeTimers();
+    const { result, onMessage } = setup();
+    const connection = socket();
+    act(() => connection.dispatchEvent(new Event("open")));
+
+    act(() => connection.dispatchEvent(new Event("close")));
+    expect(result.current.status).toBe("closed");
+    expect(MockWebSocket.instances).toHaveLength(1);
+
+    act(() => vi.runOnlyPendingTimers());
+    expect(MockWebSocket.instances).toHaveLength(2);
+    const retriedConnection = MockWebSocket.instances[1]!;
+    expect(retriedConnection.url).toBe(url);
+    expect(result.current.status).toBe("connecting");
+
+    act(() => retriedConnection.dispatchEvent(new Event("open")));
+    expect(result.current.status).toBe("open");
+    act(() => {
+      result.current.send({ text: "hello again" });
+      retriedConnection.dispatchEvent(
+        new MessageEvent("message", { data: '{"text":"welcome back"}' }),
+      );
+    });
+    expect(retriedConnection.send).toHaveBeenCalledExactlyOnceWith('{"text":"hello again"}');
+    expect(connection.send).not.toHaveBeenCalled();
+    expect(onMessage).toHaveBeenCalledExactlyOnceWith({ text: "welcome back" });
   });
 
   it("sends messages as JSON through the open connection", () => {

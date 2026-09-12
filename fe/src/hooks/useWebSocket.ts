@@ -27,56 +27,85 @@ export const useWebSocket = <TServerMessage, TClientMessage extends object = nev
 
   useEffect(() => {
     if (!connect) {
+      setStatus("closed");
       return;
     }
 
-    const webSocket = new WebSocket(url);
-    webSocketRef.current = webSocket;
-    setStatus("connecting");
+    let cancelled = false;
+    let attempts = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let webSocket: WebSocket | null = null;
+    let cleanupSocket = () => {};
 
-    const handleOpen = () => {
-      setStatus("open");
-      console.log(`[ws] Connection opened to "${url}"`);
-    };
-
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const message: unknown = JSON.parse(event.data);
-
-        // TODO: Error messages?
-        if (messageValidator(message)) {
-          onMessageEffect(message);
-        } else {
-          console.warn("Received not supported message: ", message);
-        }
-      } catch (err) {
-        console.error("Error parsing socket message: ", err);
+    const openSocket = () => {
+      if (cancelled) {
+        return;
       }
+
+      attempts += 1;
+
+      webSocket = new WebSocket(url);
+      webSocketRef.current = webSocket;
+      setStatus("connecting");
+
+      const handleOpen = () => {
+        setStatus("open");
+        attempts = 0;
+        console.log(`[ws] Connection opened to "${url}"`);
+      };
+
+      const handleMessage = (event: MessageEvent) => {
+        try {
+          const message: unknown = JSON.parse(event.data);
+
+          // TODO: Error messages?
+          if (messageValidator(message)) {
+            onMessageEffect(message);
+          } else {
+            console.warn("Received not supported message: ", message);
+          }
+        } catch (err) {
+          console.error("Error parsing socket message: ", err);
+        }
+      };
+
+      const handleError = (error: Event) => {
+        setStatus("error");
+        console.error("[ws] Error:", error);
+      };
+
+      const handleClose = () => {
+        // After error socket always triggers closed.
+        setStatus((prevStatus) => (prevStatus === "error" ? "error" : "closed"));
+        console.log("[ws] Closed.");
+
+        retryTimer = setTimeout(openSocket, 1000 * attempts);
+      };
+
+      webSocket.addEventListener("open", handleOpen);
+      webSocket.addEventListener("message", handleMessage);
+      webSocket.addEventListener("error", handleError);
+      webSocket.addEventListener("close", handleClose);
+
+      cleanupSocket = () => {
+        webSocket?.removeEventListener("open", handleOpen);
+        webSocket?.removeEventListener("message", handleMessage);
+        webSocket?.removeEventListener("error", handleError);
+        webSocket?.removeEventListener("close", handleClose);
+
+        webSocket?.close();
+      };
     };
 
-    const handleError = (error: Event) => {
-      setStatus("error");
-      console.error("[ws] Error:", error);
-    };
-
-    const handleClose = () => {
-      setStatus("closed");
-      console.log("[ws] Closed.");
-    };
-
-    webSocket.addEventListener("open", handleOpen);
-    webSocket.addEventListener("message", handleMessage);
-    webSocket.addEventListener("error", handleError);
-    webSocket.addEventListener("close", handleClose);
+    openSocket();
 
     return () => {
-      webSocket.removeEventListener("open", handleOpen);
-      webSocket.removeEventListener("message", handleMessage);
-      webSocket.removeEventListener("error", handleError);
-      webSocket.removeEventListener("close", handleClose);
+      cancelled = true;
+      clearTimeout(retryTimer);
 
-      webSocket.close();
-      setStatus("closed");
+      cleanupSocket();
+
+      webSocketRef.current = null;
     };
   }, [messageValidator, url, connect]);
 
